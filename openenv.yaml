@@ -1,0 +1,13 @@
+name: doc_env
+version: "0.1.0"
+description: >
+  Hospital Scheduler RL Environment.  An agent must assign dynamically
+  arriving patients to doctors across a simulated day while
+  respecting labor laws, specialty constraints, and handling disruptions.
+tasks:
+  - id: "easy_shift"
+    description: "8-hour shift. Low patient volume, zero disruptions. A simple test of basic specialty matching."
+  - id: "medium_shift"
+    description: "12-hour shift. Medium volume, 1 sick doctor disruption. Requires ER overflow usage and dynamic queue management."
+  - id: "hard_shift"
+    description: "12-hour shift. High volume, 2 sick doctor disruptions, night-shift rest penalties. Heavily tests load balancing."
