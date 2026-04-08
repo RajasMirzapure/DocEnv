@@ -21,10 +21,11 @@ API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME   = os.getenv("MODEL_NAME", "gpt-4o")
 
 # Support both OPENAI_API_KEY (spec requirement) and HF_TOKEN (HF Spaces style)
-API_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("HF_TOKEN")
+HF_TOKEN = os.getenv("HF_TOKEN")
+API_KEY  = os.getenv("OPENAI_API_KEY") or HF_TOKEN
 if not API_KEY:
     raise ValueError(
-        "API key not found. Set OPENAI_API_KEY (or HF_TOKEN as fallback)."
+        "API key not found. Set OPENAI_API_KEY or HF_TOKEN."
     )
 
 BACKEND_URL = os.getenv("OPENENV_BASE_URL", "http://0.0.0.0:8000")
