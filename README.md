@@ -1,3 +1,18 @@
+---
+title: DocEnv
+emoji: 🏥
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+tags:
+  - openenv
+  - reinforcement-learning
+  - simulation
+  - healthcare
+---
+
 # 🏥 DocEnv — Hospital Shift Scheduling Environment
 
 > A reinforcement learning environment where an AI agent routes patients to doctors
