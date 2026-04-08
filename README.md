@@ -55,37 +55,86 @@ done = True  ──►  final score  (0.0 – 1.0)
 ```
 DocEnv/
 │
-├── server/
-│   ├── app.py              FastAPI app — wires /reset, /step, /state to
-│   │                       HospitalEnvironment via openenv's create_app()
-│   └── environment.py      Core simulation engine. Manages the doctor roster,
-│                           event queue, clock, constraint validation, reward
-│                           calculation, and episode lifecycle.
+├── server/                         Core API package
+│   ├── __init__.py                 Package marker
+│   ├── app.py                      FastAPI application. Wires /reset, /step,
+│   │                               /state endpoints to HospitalEnvironment
+│   │                               via openenv's create_app() factory.
+│   └── environment.py              Core simulation engine. Manages the doctor
+│                                   roster, event queue, shift clock, constraint
+│                                   validation, reward calculation, and full
+│                                   episode lifecycle including sick-doctor
+│                                   disruptions and patient bumping.
 │
-├── models.py               Pydantic contracts shared by client and server:
-│                             DocAction       — agent's action each step
-│                             DocObservation  — what the agent sees
-│                             DocState        — episode metadata (/state)
+├── bonus_rl/                       Bonus — trained PPO agent (Gymnasium-based)
+│   ├── gym_wrapper.py              Wraps HospitalEnvironment as a standard
+│   │                               Gymnasium env with a flat 56-dim float32
+│   │                               observation vector and a Discrete(7) action
+│   │                               space (6 doctors + waitlist).
+│   ├── train_ppo.py                Trains a PPO agent using Stable-Baselines3.
+│   │                               Runs 4 parallel envs, evaluates every 5k
+│   │                               steps, and saves best/final model checkpoints
+│   │                               to ./ppo_hospital/.
+│   ├── evaluate.py                 Loads a saved PPO model and benchmarks it
+│   │                               over N episodes. Prints a comparison table
+│   │                               against the random and heuristic baselines.
+│   │                               Supports --render for a live terminal view.
+│   └── gemini_agent.py             Zero-shot Gemini agent. Feeds the full
+│                                   observation as JSON to gemini-2.5-flash and
+│                                   parses the structured JSON action response.
+│                                   Requires GEMINI_API_KEY env var.
 │
-├── client.py               HTTP client subclass. Handles serialization so
-│                           callers work with typed Python objects.
+├── ppo_hospital/                   Saved PPO checkpoints (auto-generated)
+│   ├── best_model.zip              Best checkpoint by eval reward during training
+│   ├── final_model.zip             Model weights at end of training run
+│   └── evaluations.npz             Evaluation reward history logged by SB3
 │
-├── inference.py            Hackathon baseline script. Drives an LLM through
-│                           all 3 tasks using the OpenAI API client. Emits
-│                           strict [START] / [STEP] / [END] log lines for
-│                           automated scoring.
+├── __init__.py                     Top-level package marker
+├── models.py                       Typed Pydantic contracts shared by client
+│                                   and server:
+│                                     DocAction      — agent's action each step
+│                                     DocObservation — what the agent sees
+│                                     DocState       — episode metadata (/state)
 │
-├── test_heuristic.py       Rule-based heuristic agent for local benchmarking.
-│                           Runs 100 episodes and reports average reward,
-│                           scheduling stats, and violation rate.
+├── client.py                       OpenEnv EnvClient subclass. Handles HTTP
+│                                   serialization so callers work with typed
+│                                   Python objects instead of raw dicts.
 │
-├── openenv.yaml            OpenEnv metadata manifest — env name, version,
-│                           description, and all 3 task IDs.
+├── inference.py                    Hackathon-compliant LLM baseline. Drives
+│                                   any OpenAI-compatible model through all 3
+│                                   tasks. Reads OPENAI_API_KEY (or HF_TOKEN),
+│                                   emits strict [START] / [STEP] / [END] log
+│                                   lines for automated evaluator scoring.
 │
-├── pyproject.toml          Dependencies and the doc-env-server entry point.
-├── Dockerfile              Multi-stage build. Installs with uv, launches
-│                           uvicorn on port 8000, includes a health check.
-└── uv.lock                 Pinned lockfile for reproducible builds.
+├── test_heuristic.py               Rule-based heuristic agent. Always routes
+│                                   to the best eligible doctor (fewest hours,
+│                                   correct specialty) and waitlists only when
+│                                   no legal assignment exists. Runs 100 episodes
+│                                   and prints avg reward + violation rate.
+│
+├── test_random.py                  Random baseline. Picks a random doctor each
+│                                   step with a 10% chance of waitlisting.
+│                                   Used to verify the environment doesn't crash
+│                                   and to establish a lower-bound score.
+│
+├── openenv.yaml                    OpenEnv metadata manifest. Declares the env
+│                                   name, version, description, and all 3 task
+│                                   IDs (easy_shift, medium_shift, hard_shift).
+│
+├── pyproject.toml                  Project dependencies (openenv-core, FastAPI,
+│                                   uvicorn, pydantic, openai, stable-baselines3,
+│                                   google-genai, etc.) and the doc-env-server
+│                                   console script entry point.
+│
+├── Dockerfile                      Multi-stage container build. Installs deps
+│                                   with uv, copies the app, launches uvicorn
+│                                   on port 8000, includes a /health check.
+│
+├── uv.lock                         Pinned dependency lockfile for fully
+│                                   reproducible installs across machines.
+│
+└── .gitignore                      Excludes .venv/, __pycache__/, .env files,
+                                    build artifacts, and OS noise.
 ```
 
 ---
