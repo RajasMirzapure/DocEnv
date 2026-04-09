@@ -477,7 +477,7 @@ class HospitalEnvironment(Environment):
 
     def _calculate_normalized_score(self) -> float:
         """Returns score in strictly (0, 1) range for hackathon grader."""
-        EPS = 1e-4
+        EPS = 0.01  # 1% buffer on each side — robust against rounding
         max_theoretical_reward = max(self._pctr * R_BOOK, 10.0)
         score = max(self._score, 0.0)
         normalized = min(score / max_theoretical_reward, 1.0)
