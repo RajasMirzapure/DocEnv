@@ -476,12 +476,13 @@ class HospitalEnvironment(Environment):
         return penalty
 
     def _calculate_normalized_score(self) -> float:
-        """Returns score in 0.0-1.0 bounded range for hackathon grader."""
-        # max possible patients approx endpoints (upper bound to give robust range)
+        """Returns score in strictly (0, 1) range for hackathon grader."""
+        EPS = 1e-4
         max_theoretical_reward = max(self._pctr * R_BOOK, 10.0)
-        # Shift scale: if score <= 0 -> 0.0
         score = max(self._score, 0.0)
-        return min(score / max_theoretical_reward, 1.0)
+        normalized = min(score / max_theoretical_reward, 1.0)
+        # Clamp to open interval (0, 1) — validator rejects 0.0 and 1.0
+        return min(max(normalized, EPS), 1.0 - EPS)
 
     # ── observation / state helpers ───────────────────────────────────────
 

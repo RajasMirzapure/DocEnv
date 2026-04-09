@@ -187,7 +187,8 @@ def run_task(client: OpenAI, backend_url: str, task_name: str) -> None:
                 score = reward   # final reward is already normalized [0, 1]
                 break
 
-        score   = min(max(score, 0.0), 1.0)
+        EPS     = 1e-4
+        score   = min(max(score, EPS), 1.0 - EPS)
         success = score >= SUCCESS_SCORE_THRESHOLD
 
     except Exception as exc:
