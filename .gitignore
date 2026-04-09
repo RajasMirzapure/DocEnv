@@ -40,3 +40,4 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+ppo_hospital/*.zip
